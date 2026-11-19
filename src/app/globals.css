@@ -13,8 +13,10 @@
   --amber: #ef9f1c;
   --coral: #ef6b4a;
   --violet: #6b5ce7;
-  --panel: rgba(255, 255, 255, 0.9);
+  --panel: rgba(255, 255, 255, 0.92);
   --line: rgba(29, 122, 69, 0.18);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
 }
 
 @theme inline {
@@ -34,12 +36,21 @@
   --font-display: var(--font-display);
 }
 
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   background:
     radial-gradient(circle at 8% 0%, rgba(239, 159, 28, 0.28), transparent 32%),
     radial-gradient(circle at 92% 8%, rgba(47, 155, 216, 0.26), transparent 30%),
     radial-gradient(circle at 50% 100%, rgba(76, 175, 112, 0.28), transparent 40%),
     linear-gradient(160deg, #f3fff7 0%, #e8f7ff 45%, #fff4e4 100%);
+  background-attachment: fixed;
   color: var(--foreground);
   font-family: var(--font-body), "Noto Sans Sinhala", sans-serif;
   min-height: 100dvh;
@@ -50,7 +61,7 @@ body::before {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  opacity: 0.45;
+  opacity: 0.4;
   background-image:
     radial-gradient(circle at 20% 20%, rgba(107, 92, 231, 0.08), transparent 24%),
     radial-gradient(circle at 80% 70%, rgba(239, 107, 74, 0.1), transparent 22%);
@@ -59,7 +70,7 @@ body::before {
 @keyframes rise-in {
   from {
     opacity: 0;
-    transform: translateY(16px) scale(0.98);
+    transform: translateY(14px) scale(0.985);
   }
   to {
     opacity: 1;
@@ -79,12 +90,22 @@ body::before {
   }
 }
 
+@keyframes pulse-dot {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.25);
+  }
+}
+
 .animate-rise {
-  animation: rise-in 0.45s ease both;
+  animation: rise-in 0.4s ease both;
 }
 
 .animate-rise-delay {
-  animation: rise-in 0.55s ease 0.08s both;
+  animation: rise-in 0.5s ease 0.08s both;
 }
 
 .glow-orb {
@@ -94,6 +115,8 @@ body::before {
 .screen-shell {
   min-height: 100dvh;
   min-height: 100svh;
+  padding-top: max(0.75rem, var(--safe-top));
+  padding-bottom: max(1rem, var(--safe-bottom));
 }
 
 .option-a {
@@ -111,4 +134,44 @@ body::before {
 .option-d {
   --accent: #6b5ce7;
   --soft: #ece9ff;
+}
+
+.progress-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: rgba(47, 107, 74, 0.25);
+  transition: all 0.25s ease;
+}
+
+.progress-dot.is-active {
+  width: 1.35rem;
+  background: linear-gradient(90deg, var(--leaf), var(--sky));
+  animation: pulse-dot 1.4s ease-in-out infinite;
+}
+
+.progress-dot.is-done {
+  background: var(--leaf);
+}
+
+.sticky-actions {
+  position: sticky;
+  bottom: 0;
+  margin-top: 1rem;
+  padding-bottom: max(0.25rem, var(--safe-bottom));
+  background: linear-gradient(
+    180deg,
+    rgba(243, 255, 247, 0) 0%,
+    rgba(243, 255, 247, 0.92) 28%,
+    rgba(243, 255, 247, 1) 100%
+  );
+}
+
+@media (max-width: 640px) {
+  input,
+  button,
+  textarea,
+  select {
+    font-size: 16px;
+  }
 }

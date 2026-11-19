@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { QUESTIONS } from "@/lib/questions";
 
 type Status = "idle" | "saving" | "done" | "error";
@@ -17,15 +17,21 @@ export default function QuestionnaireForm() {
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [status, setStatus] = useState<Status>("idle");
   const [message, setMessage] = useState("");
+  const topRef = useRef<HTMLDivElement>(null);
 
   const questionIndex = typeof step === "number" ? step : -1;
   const question = questionIndex >= 0 ? QUESTIONS[questionIndex] : null;
+
   const progress =
     step === "details"
       ? 0
       : step === "done"
         ? 100
         : Math.round(((questionIndex + 1) / QUESTIONS.length) * 100);
+
+  useEffect(() => {
+    topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [step]);
 
   function goNextFromDetails() {
     if (name.trim().length < 2) {
@@ -49,6 +55,7 @@ export default function QuestionnaireForm() {
   function selectAnswer(optionIndex: number) {
     if (!question) return;
     setAnswers((prev) => ({ ...prev, [question.id]: optionIndex }));
+    setMessage("");
   }
 
   function goNextQuestion() {
@@ -105,32 +112,44 @@ export default function QuestionnaireForm() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-lg flex-col">
+    <div ref={topRef} className="mx-auto flex w-full max-w-lg flex-col pb-2">
       <div className="mb-4">
-        <div className="mb-2 flex items-center justify-between text-xs font-semibold text-moss sm:text-sm">
-          <span>
+        <div className="mb-2 flex items-center justify-between gap-3 text-xs font-semibold text-moss sm:text-sm">
+          <span className="truncate">
             {step === "details"
               ? "පුද්ගලික තොරතුරු"
               : step === "done"
                 ? "අවසන්"
                 : `ප්‍රශ්නය ${questionIndex + 1} / ${QUESTIONS.length}`}
           </span>
-          <span>{progress}%</span>
+          <span className="shrink-0 rounded-full bg-white/80 px-2.5 py-1 text-forest">
+            {progress}%
+          </span>
         </div>
-        <div className="h-2.5 overflow-hidden rounded-full bg-white/70 shadow-inner">
+        <div className="h-2.5 overflow-hidden rounded-full bg-white/80 shadow-inner">
           <div
             className="h-full rounded-full bg-gradient-to-r from-leaf via-sky to-violet transition-all duration-500"
             style={{ width: `${progress}%` }}
           />
         </div>
+        {typeof step === "number" && (
+          <div className="mt-3 flex items-center justify-center gap-1.5">
+            {QUESTIONS.map((item, index) => (
+              <span
+                key={item.id}
+                className={`progress-dot ${
+                  index === step ? "is-active" : index < step ? "is-done" : ""
+                }`}
+                aria-hidden
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {step === "details" && (
-        <section className="animate-rise rounded-[1.75rem] border border-white/70 bg-gradient-to-br from-white via-sky-soft/60 to-mist p-5 shadow-[0_18px_40px_rgba(18,48,36,0.12)] sm:p-7">
-          <p className="inline-flex rounded-full bg-amber/20 px-3 py-1 text-xs font-bold text-amber">
-            පියවර 1
-          </p>
-          <h2 className="mt-3 font-[family-name:var(--font-display)] text-2xl leading-snug text-forest-deep sm:text-3xl">
+        <section className="animate-rise rounded-[1.75rem] border border-white/80 bg-gradient-to-br from-white via-sky-soft/60 to-mist p-5 shadow-[0_18px_40px_rgba(18,48,36,0.12)] sm:p-7">
+          <h2 className="font-[family-name:var(--font-display)] text-2xl leading-snug text-forest-deep sm:text-3xl">
             ඔබේ විස්තර ඇතුළත් කරන්න
           </h2>
           <p className="mt-2 text-sm text-moss">
@@ -143,10 +162,11 @@ export default function QuestionnaireForm() {
                 සම්පූර්ණ නම
               </span>
               <input
+                autoComplete="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="උදා: කමල් පෙරේරා"
-                className="w-full rounded-2xl border-2 border-leaf/25 bg-white px-4 py-3.5 text-base outline-none transition focus:border-forest focus:ring-4 focus:ring-leaf/25"
+                className="min-h-14 w-full rounded-2xl border-2 border-leaf/25 bg-white px-4 py-3.5 outline-none transition focus:border-forest focus:ring-4 focus:ring-leaf/25"
               />
             </label>
             <label className="block">
@@ -156,12 +176,13 @@ export default function QuestionnaireForm() {
               <input
                 type="number"
                 inputMode="numeric"
+                autoComplete="off"
                 min={18}
                 max={70}
                 value={age}
                 onChange={(e) => setAge(e.target.value)}
                 placeholder="උදා: 34"
-                className="w-full rounded-2xl border-2 border-sky/25 bg-white px-4 py-3.5 text-base outline-none transition focus:border-sky focus:ring-4 focus:ring-sky/25"
+                className="min-h-14 w-full rounded-2xl border-2 border-sky/25 bg-white px-4 py-3.5 outline-none transition focus:border-sky focus:ring-4 focus:ring-sky/25"
               />
             </label>
             <label className="block">
@@ -170,34 +191,40 @@ export default function QuestionnaireForm() {
               </span>
               <input
                 inputMode="tel"
+                autoComplete="tel"
                 value={whatsapp}
                 onChange={(e) => setWhatsapp(e.target.value)}
                 placeholder="උදා: 0771234567"
-                className="w-full rounded-2xl border-2 border-violet/25 bg-white px-4 py-3.5 text-base outline-none transition focus:border-violet focus:ring-4 focus:ring-violet/25"
+                className="min-h-14 w-full rounded-2xl border-2 border-violet/25 bg-white px-4 py-3.5 outline-none transition focus:border-violet focus:ring-4 focus:ring-violet/25"
               />
             </label>
           </div>
 
           {message && (
-            <p className="mt-4 rounded-2xl bg-coral/15 px-4 py-3 text-sm font-medium text-coral">
+            <p
+              role="alert"
+              className="mt-4 rounded-2xl bg-coral/15 px-4 py-3 text-sm font-medium text-coral"
+            >
               {message}
             </p>
           )}
 
-          <button
-            type="button"
-            onClick={goNextFromDetails}
-            className="mt-6 w-full rounded-2xl bg-gradient-to-r from-forest to-sky px-5 py-4 text-base font-bold text-white shadow-lg shadow-forest/25 transition active:scale-[0.98]"
-          >
-            ප්‍රශ්න වෙත යන්න
-          </button>
+          <div className="sticky-actions pt-4">
+            <button
+              type="button"
+              onClick={goNextFromDetails}
+              className="min-h-14 w-full rounded-2xl bg-gradient-to-r from-forest to-sky px-4 py-3.5 text-sm font-bold text-white shadow-lg shadow-forest/25 transition active:scale-[0.98]"
+            >
+              ඉදිරියට
+            </button>
+          </div>
         </section>
       )}
 
       {question && (
         <section
           key={question.id}
-          className="animate-rise rounded-[1.75rem] border border-white/70 bg-white/95 p-5 shadow-[0_18px_40px_rgba(18,48,36,0.12)] sm:p-7"
+          className="animate-rise rounded-[1.75rem] border border-white/80 bg-white/95 p-5 shadow-[0_18px_40px_rgba(18,48,36,0.12)] sm:p-7"
         >
           <div className="flex flex-wrap items-center gap-2">
             <span className="rounded-full bg-gradient-to-r from-leaf to-sky px-3 py-1 text-xs font-bold text-white">
@@ -214,32 +241,34 @@ export default function QuestionnaireForm() {
             </span>
           </div>
 
-          <h2 className="mt-4 text-xl leading-relaxed font-bold text-forest-deep sm:text-2xl">
+          <h2 className="mt-4 text-[1.15rem] leading-relaxed font-bold text-forest-deep sm:text-2xl">
             {question.prompt}
           </h2>
 
-          <div className="mt-5 space-y-3">
+          <div className="mt-5 space-y-3" role="radiogroup" aria-label="පිළිතුරු">
             {question.options.map((option, optionIndex) => {
               const selected = answers[question.id] === optionIndex;
               return (
                 <button
                   key={option}
                   type="button"
+                  role="radio"
+                  aria-checked={selected}
                   onClick={() => selectAnswer(optionIndex)}
-                  className={`${OPTION_STYLES[optionIndex]} flex w-full items-start gap-3 rounded-2xl border-2 px-4 py-3.5 text-left transition active:scale-[0.99] ${
+                  className={`${OPTION_STYLES[optionIndex]} flex min-h-14 w-full items-start gap-3 rounded-2xl border-2 px-4 py-3.5 text-left transition active:scale-[0.99] ${
                     selected
                       ? "border-[var(--accent)] bg-[var(--soft)] shadow-md"
-                      : "border-transparent bg-[var(--soft)]/55 hover:border-[var(--accent)]/40"
+                      : "border-transparent bg-[var(--soft)]/55"
                   }`}
                 >
                   <span
-                    className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white ${
+                    className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white ${
                       selected ? "bg-[var(--accent)]" : "bg-[var(--accent)]/70"
                     }`}
                   >
                     {OPTION_LETTERS[optionIndex]}
                   </span>
-                  <span className="pt-1 text-[15px] leading-relaxed text-foreground sm:text-base">
+                  <span className="pt-1.5 text-[15px] leading-relaxed text-foreground sm:text-base">
                     {option}
                   </span>
                 </button>
@@ -248,16 +277,19 @@ export default function QuestionnaireForm() {
           </div>
 
           {message && (
-            <p className="mt-4 rounded-2xl bg-coral/15 px-4 py-3 text-sm font-medium text-coral">
+            <p
+              role="alert"
+              className="mt-4 rounded-2xl bg-coral/15 px-4 py-3 text-sm font-medium text-coral"
+            >
               {message}
             </p>
           )}
 
-          <div className="mt-6 grid grid-cols-2 gap-3">
+          <div className="sticky-actions grid grid-cols-2 gap-3 pt-4">
             <button
               type="button"
               onClick={goPrev}
-              className="rounded-2xl border-2 border-moss/20 bg-mist px-4 py-3.5 text-sm font-bold text-forest transition active:scale-[0.98]"
+              className="min-h-14 rounded-2xl border-2 border-moss/20 bg-mist px-4 py-3.5 text-sm font-bold text-forest transition active:scale-[0.98]"
             >
               ආපසු
             </button>
@@ -265,7 +297,7 @@ export default function QuestionnaireForm() {
               type="button"
               onClick={goNextQuestion}
               disabled={status === "saving"}
-              className="rounded-2xl bg-gradient-to-r from-coral to-amber px-4 py-3.5 text-sm font-bold text-white shadow-lg shadow-coral/25 transition active:scale-[0.98] disabled:opacity-60"
+              className="min-h-14 rounded-2xl bg-gradient-to-r from-coral to-amber px-4 py-3.5 text-sm font-bold text-white shadow-lg shadow-coral/25 transition active:scale-[0.98] disabled:opacity-60"
             >
               {status === "saving"
                 ? "යවමින්..."
@@ -278,16 +310,19 @@ export default function QuestionnaireForm() {
       )}
 
       {step === "done" && (
-        <section className="animate-rise rounded-[1.75rem] border border-white/70 bg-gradient-to-br from-mist via-white to-sky-soft p-6 text-center shadow-[0_18px_40px_rgba(18,48,36,0.12)] sm:p-8">
-          <p className="inline-flex rounded-full bg-leaf px-3 py-1 text-xs font-bold text-white">
+        <section className="animate-rise rounded-[1.75rem] border border-white/80 bg-gradient-to-br from-mist via-white to-sky-soft p-6 text-center shadow-[0_18px_40px_rgba(18,48,36,0.12)] sm:p-8">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-leaf to-sky text-2xl text-white shadow-lg">
+            ✓
+          </div>
+          <p className="mt-4 inline-flex rounded-full bg-leaf px-3 py-1 text-xs font-bold text-white">
             සාර්ථකයි
           </p>
-          <h2 className="mt-4 font-[family-name:var(--font-display)] text-3xl text-forest-deep">
+          <h2 className="mt-3 font-[family-name:var(--font-display)] text-3xl text-forest-deep">
             ස්තූතියි, {name}
           </h2>
           <p className="mt-3 text-base leading-relaxed text-moss">
             ඔබේ ප්‍රතිචාරය සාර්ථකව ලැබුණි. පුහුණු වැඩසටහනට සහභාගී වීම ගැන
-            ස්තුතියි.
+            ස්තූතියි.
           </p>
         </section>
       )}
