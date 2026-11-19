@@ -22,7 +22,8 @@ export async function DELETE() {
   try {
     await clearSubmissions();
     return NextResponse.json({ ok: true, submissions: [] });
-  } catch {
+  } catch (error) {
+    console.error("Failed to clear submissions:", error);
     return NextResponse.json(
       { error: "ප්‍රතිඵල යළි සැකසීමට නොහැකි විය." },
       { status: 500 },
@@ -91,7 +92,8 @@ export async function POST(request: Request) {
     await addSubmission(submission);
 
     return NextResponse.json({ submission }, { status: 201 });
-  } catch {
+  } catch (error) {
+    console.error("Failed to save submission:", error);
     return NextResponse.json(
       { error: "ප්‍රතිචාරය සුරැකීමට නොහැකි විය." },
       { status: 500 },
