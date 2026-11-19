@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { QUESTIONS } from "@/lib/questions";
 
 type Status = "idle" | "saving" | "done" | "error";
-type Step = "details" | number | "done";
+type Step = "details" | number | "learning" | "done";
 
 const OPTION_STYLES = ["option-a", "option-b", "option-c", "option-d"] as const;
 const OPTION_LETTERS = ["අ", "ආ", "ඇ", "ඈ"];
@@ -15,6 +15,7 @@ export default function QuestionnaireForm() {
   const [age, setAge] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [answers, setAnswers] = useState<Record<string, number>>({});
+  const [learningGoals, setLearningGoals] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [message, setMessage] = useState("");
   const topRef = useRef<HTMLDivElement>(null);
@@ -25,9 +26,11 @@ export default function QuestionnaireForm() {
   const progress =
     step === "details"
       ? 0
-      : step === "done"
-        ? 100
-        : Math.round(((questionIndex + 1) / QUESTIONS.length) * 100);
+      : step === "learning"
+        ? 92
+        : step === "done"
+          ? 100
+          : Math.round(((questionIndex + 1) / QUESTIONS.length) * 85);
 
   useEffect(() => {
     topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -69,11 +72,26 @@ export default function QuestionnaireForm() {
       setStep(questionIndex + 1);
       return;
     }
+    setStep("learning");
+  }
+
+  function goNextFromLearning() {
+    if (learningGoals.trim().length < 5) {
+      setMessage(
+        "කරුණාකර මෙම දින 2 වැඩමුළුවෙන් ඉගෙන ගැනීමට අවශ්‍ය දේ ලියන්න.",
+      );
+      return;
+    }
+    setMessage("");
     void submitAnswers();
   }
 
   function goPrev() {
     setMessage("");
+    if (step === "learning") {
+      setStep(QUESTIONS.length - 1);
+      return;
+    }
     if (step === 0) {
       setStep("details");
       return;
@@ -95,6 +113,7 @@ export default function QuestionnaireForm() {
           age: Number(age),
           whatsapp,
           answers,
+          learningGoals: learningGoals.trim(),
         }),
       });
       const data = await response.json();
@@ -118,9 +137,11 @@ export default function QuestionnaireForm() {
           <span className="truncate">
             {step === "details"
               ? "පුද්ගලික තොරතුරු"
-              : step === "done"
-                ? "අවසන්"
-                : `ප්‍රශ්නය ${questionIndex + 1} / ${QUESTIONS.length}`}
+              : step === "learning"
+                ? "ඉගෙනුම් අපේක්ෂාව"
+                : step === "done"
+                  ? "අවසන්"
+                  : `ප්‍රශ්නය ${questionIndex + 1} / ${QUESTIONS.length}`}
           </span>
           <span className="shrink-0 rounded-full bg-white/80 px-2.5 py-1 text-forest">
             {progress}%
@@ -296,14 +317,70 @@ export default function QuestionnaireForm() {
             <button
               type="button"
               onClick={goNextQuestion}
-              disabled={status === "saving"}
-              className="min-h-14 rounded-2xl bg-gradient-to-r from-coral to-amber px-4 py-3.5 text-sm font-bold text-white shadow-lg shadow-coral/25 transition active:scale-[0.98] disabled:opacity-60"
+              className="min-h-14 rounded-2xl bg-gradient-to-r from-coral to-amber px-4 py-3.5 text-sm font-bold text-white shadow-lg shadow-coral/25 transition active:scale-[0.98]"
             >
-              {status === "saving"
-                ? "යවමින්..."
-                : questionIndex === QUESTIONS.length - 1
-                  ? "ඉදිරිපත් කරන්න"
-                  : "ඊළඟ ප්‍රශ්නය"}
+              {questionIndex === QUESTIONS.length - 1
+                ? "ඊළඟ පියවර"
+                : "ඊළඟ ප්‍රශ්නය"}
+            </button>
+          </div>
+        </section>
+      )}
+
+      {step === "learning" && (
+        <section className="animate-rise rounded-[1.75rem] border border-white/80 bg-gradient-to-br from-white via-[#fff6e8] to-sky-soft p-5 shadow-[0_18px_40px_rgba(18,48,36,0.12)] sm:p-7">
+          <p className="inline-flex rounded-full bg-amber/20 px-3 py-1 text-xs font-bold text-amber">
+            අවසන් පියවර
+          </p>
+          <h2 className="mt-3 font-[family-name:var(--font-display)] text-2xl leading-snug text-forest-deep sm:text-3xl">
+            මෙම දින 2 වැඩමුළුවෙන් ඔබට ඉගෙන ගැනීමට අවශ්‍ය කුමක්ද?
+          </h2>
+          <p className="mt-2 text-sm leading-relaxed text-moss">
+            ඩිජිටල් සන්නිවේදනය, PowerPoint, WhatsApp, AI හෝ වෙනත් කුසලතා ගැන
+            ඔබේ අපේක්ෂාව කෙටියෙන් ලියන්න.
+          </p>
+
+          <label className="mt-5 block">
+            <span className="mb-2 block text-sm font-semibold text-forest">
+              ඉගෙනුම් අපේක්ෂාව
+            </span>
+            <textarea
+              value={learningGoals}
+              onChange={(e) => setLearningGoals(e.target.value)}
+              rows={6}
+              maxLength={1000}
+              placeholder="උදා: PowerPoint ස්ලයිඩ් හොඳින් සෑදීමට සහ ChatGPT භාවිතයෙන් ලිපි ලිවීමට ඉගෙන ගැනීමට අවශ්‍යයි."
+              className="w-full resize-y rounded-2xl border-2 border-amber/30 bg-white px-4 py-3.5 text-base leading-relaxed outline-none transition focus:border-amber focus:ring-4 focus:ring-amber/25"
+            />
+            <span className="mt-2 block text-right text-xs text-moss">
+              {learningGoals.trim().length}/1000
+            </span>
+          </label>
+
+          {message && (
+            <p
+              role="alert"
+              className="mt-4 rounded-2xl bg-coral/15 px-4 py-3 text-sm font-medium text-coral"
+            >
+              {message}
+            </p>
+          )}
+
+          <div className="sticky-actions grid grid-cols-2 gap-3 pt-4">
+            <button
+              type="button"
+              onClick={goPrev}
+              className="min-h-14 rounded-2xl border-2 border-moss/20 bg-mist px-4 py-3.5 text-sm font-bold text-forest transition active:scale-[0.98]"
+            >
+              ආපසු
+            </button>
+            <button
+              type="button"
+              onClick={goNextFromLearning}
+              disabled={status === "saving"}
+              className="min-h-14 rounded-2xl bg-gradient-to-r from-forest to-sky px-4 py-3.5 text-sm font-bold text-white shadow-lg shadow-forest/25 transition active:scale-[0.98] disabled:opacity-60"
+            >
+              {status === "saving" ? "යවමින්..." : "ඉදිරිපත් කරන්න"}
             </button>
           </div>
         </section>

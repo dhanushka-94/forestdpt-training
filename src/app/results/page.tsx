@@ -285,6 +285,14 @@ async function ResultsContent() {
                         {formatDate(item.submittedAt)}
                       </dd>
                     </div>
+                    <div className="rounded-2xl bg-white/55 px-3 py-2">
+                      <dt className="font-semibold text-moss">
+                        දින 2 වැඩමුළුවෙන් ඉගෙන ගැනීමට අවශ්‍ය දේ
+                      </dt>
+                      <dd className="mt-1 text-sm leading-relaxed font-medium text-forest-deep">
+                        {item.learningGoals?.trim() || "—"}
+                      </dd>
+                    </div>
                   </dl>
                 </article>
               ))}
@@ -304,6 +312,7 @@ async function ResultsContent() {
                       <th className="px-4 py-3 font-semibold">නම</th>
                       <th className="px-4 py-3 font-semibold">වයස</th>
                       <th className="px-4 py-3 font-semibold">WhatsApp</th>
+                      <th className="px-4 py-3 font-semibold">ඉගෙනුම් අපේක්ෂාව</th>
                       <th className="px-4 py-3 font-semibold">ලකුණු</th>
                       <th className="px-4 py-3 font-semibold">%</th>
                       <th className="px-4 py-3 font-semibold">දිනය</th>
@@ -324,6 +333,9 @@ async function ResultsContent() {
                         <td className="px-4 py-3 font-medium">{item.age}</td>
                         <td className="px-4 py-3 whitespace-nowrap font-medium">
                           {item.whatsapp}
+                        </td>
+                        <td className="max-w-xs px-4 py-3 text-sm leading-relaxed text-forest-deep">
+                          {item.learningGoals?.trim() || "—"}
                         </td>
                         <td className="px-4 py-3">
                           {item.score}/{item.total}

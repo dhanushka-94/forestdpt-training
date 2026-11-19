@@ -38,6 +38,7 @@ export async function POST(request: Request) {
     const age = Number(body.age);
     const whatsapp = String(body.whatsapp ?? "").trim();
     const answers = (body.answers ?? {}) as Record<string, number>;
+    const learningGoals = String(body.learningGoals ?? "").trim();
 
     if (!name || name.length < 2) {
       return NextResponse.json(
@@ -75,6 +76,23 @@ export async function POST(request: Request) {
       }
     }
 
+    if (learningGoals.length < 5) {
+      return NextResponse.json(
+        {
+          error:
+            "කරුණාකර මෙම දින 2 වැඩමුළුවෙන් ඉගෙන ගැනීමට අවශ්‍ය දේ ලියන්න.",
+        },
+        { status: 400 },
+      );
+    }
+
+    if (learningGoals.length > 1000) {
+      return NextResponse.json(
+        { error: "ඉගෙනුම් අපේක්ෂාව අකුරු 1000කට අඩුවෙන් ලියන්න." },
+        { status: 400 },
+      );
+    }
+
     const score = scoreAnswers(answers);
     const total = QUESTIONS.length;
     const submission: Submission = {
@@ -83,6 +101,7 @@ export async function POST(request: Request) {
       age,
       whatsapp: cleanWhatsapp,
       answers,
+      learningGoals,
       score,
       total,
       percentage: Math.round((score / total) * 100),

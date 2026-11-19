@@ -4,6 +4,7 @@ export type Submission = {
   age: number;
   whatsapp: string;
   answers: Record<string, number>;
+  learningGoals: string;
   score: number;
   total: number;
   percentage: number;
