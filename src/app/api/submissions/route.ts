@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { QUESTIONS } from "@/lib/questions";
-import { addSubmission, getSubmissions } from "@/lib/store";
+import { addSubmission, clearSubmissions, getSubmissions } from "@/lib/store";
 import type { Submission } from "@/lib/types";
 
 function scoreAnswers(answers: Record<string, number>) {
@@ -16,6 +16,18 @@ function scoreAnswers(answers: Record<string, number>) {
 export async function GET() {
   const submissions = await getSubmissions();
   return NextResponse.json({ submissions });
+}
+
+export async function DELETE() {
+  try {
+    await clearSubmissions();
+    return NextResponse.json({ ok: true, submissions: [] });
+  } catch {
+    return NextResponse.json(
+      { error: "ප්‍රතිඵල යළි සැකසීමට නොහැකි විය." },
+      { status: 500 },
+    );
+  }
 }
 
 export async function POST(request: Request) {

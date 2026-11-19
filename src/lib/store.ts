@@ -33,3 +33,8 @@ export async function addSubmission(
   await fs.writeFile(DATA_FILE, JSON.stringify(submissions, null, 2), "utf8");
   return submission;
 }
+
+export async function clearSubmissions(): Promise<void> {
+  await ensureStore();
+  await fs.writeFile(DATA_FILE, "[]", "utf8");
+}
